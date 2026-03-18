@@ -1,0 +1,27 @@
+node_modules/
+.env
+.env.local
+dist/
+build/
+.expo/
+web-build/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Expo
+.expo-shared/
+
+# IDE
+.vscode/
+.idea/
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+npm-debug.log*
