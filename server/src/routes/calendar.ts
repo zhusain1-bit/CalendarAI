@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
-import { requireSubscription } from '../middleware/requireSubscription';
 import { createGoogleCalendarEvent } from '../services/googleCalService';
 import { createOutlookCalendarEvent } from '../services/outlookCalService';
 import { createError } from '../middleware/errorHandler';
@@ -8,7 +6,7 @@ import type { MeetingExtraction } from '../services/claudeService';
 
 const router = Router();
 
-router.post('/create', requireAuth, requireSubscription, async (req, res, next) => {
+router.post('/create', async (req, res, next) => {
   try {
     const {
       provider,

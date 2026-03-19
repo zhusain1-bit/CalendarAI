@@ -22,6 +22,7 @@ export default function SignIn() {
   const { setCredentials } = useAuthStore();
   const [loading, setLoading] = useState(false);
   const [loadingMsg, setLoadingMsg] = useState('Signing in...');
+  const [error, setError] = useState<string | null>(null);
 
   const { request: googleRequest, response: googleResponse, promptAsync: promptGoogle, redirectUri: googleRedirectUri } = useGoogleAuth();
   const { request: msRequest, response: msResponse, promptAsync: promptMicrosoft, redirectUri: msRedirectUri } = useMicrosoftAuth();
@@ -61,7 +62,8 @@ export default function SignIn() {
 
       router.replace('/(app)/home');
     } catch (err: any) {
-      console.error('Google sign-in error:', err.message);
+      console.log('Google sign-in error:', err.message, err.status);
+      setError(err.message ?? 'Sign-in failed');
     } finally {
       setLoading(false);
     }
@@ -86,7 +88,8 @@ export default function SignIn() {
 
       router.replace('/(app)/home');
     } catch (err: any) {
-      console.error('Microsoft sign-in error:', err.message);
+      console.log('Microsoft sign-in error:', err.message, err.status);
+      setError(err.message ?? 'Sign-in failed');
     } finally {
       setLoading(false);
     }
@@ -102,6 +105,12 @@ export default function SignIn() {
             Screenshot a message.{'\n'}Get a calendar invite. Instantly.
           </Text>
         </View>
+
+        {error && (
+          <View style={styles.errorBox}>
+            <Text style={styles.errorText}>{error}</Text>
+          </View>
+        )}
 
         <View style={styles.buttons}>
           <Button
@@ -157,6 +166,8 @@ const styles = StyleSheet.create({
     lineHeight: 26,
     marginTop: 4,
   },
+  errorBox: { backgroundColor: '#FEF2F2', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#FECACA', marginBottom: 8 },
+  errorText: { fontSize: 14, color: '#B91C1C', textAlign: 'center' },
   buttons: { gap: 12 },
   skipBtn: { paddingVertical: 14, alignItems: 'center' },
   skipText: { fontSize: 15, color: '#9CA3AF' },

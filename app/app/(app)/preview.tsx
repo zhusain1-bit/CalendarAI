@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,7 +6,6 @@ import {
   SafeAreaView,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMeetingStore } from '../../src/stores/meetingStore';
@@ -26,11 +25,15 @@ export default function Preview() {
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!currentMeeting) {
-    router.replace('/(app)/capture');
-    return null;
-  }
+  useEffect(() => {
+    if (!currentMeeting) {
+      router.replace('/(app)/capture');
+    }
+  }, [currentMeeting]);
+
+  if (!currentMeeting) return null;
 
   async function handleProviderSelect(provider: CalendarProvider) {
     setCreating(true);
@@ -86,7 +89,8 @@ export default function Preview() {
         params: { provider, eventUrl: calendarEventUrl ?? '' },
       });
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Could not create calendar event');
+      setSheetVisible(false);
+      setError(err.message ?? 'Could not create calendar event');
     } finally {
       setCreating(false);
     }
@@ -118,9 +122,15 @@ export default function Preview() {
           onChange={(updated) => updateCurrentMeeting(updated)}
         />
 
+        {error && (
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>⚠️ {error}</Text>
+          </View>
+        )}
+
         <Button
           label="Create Calendar Event →"
-          onPress={() => setSheetVisible(true)}
+          onPress={() => { setError(null); setSheetVisible(true); }}
           variant="primary"
           fullWidth
           style={styles.createBtn}
@@ -151,5 +161,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', color: '#111827' },
   scroll: { padding: 20, gap: 16, paddingBottom: 40 },
   instruction: { fontSize: 14, color: '#6B7280', lineHeight: 20 },
+  errorBanner: { backgroundColor: '#FEF2F2', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#FECACA' },
+  errorText: { fontSize: 14, color: '#B91C1C' },
   createBtn: { marginTop: 8 },
 });

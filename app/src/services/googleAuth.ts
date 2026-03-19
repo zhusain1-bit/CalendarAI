@@ -1,8 +1,5 @@
 import * as AuthSession from 'expo-auth-session';
-import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
-
-WebBrowser.maybeCompleteAuthSession();
 
 const GOOGLE_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID!;
 
@@ -20,10 +17,12 @@ const SCOPES = [
 ];
 
 export function useGoogleAuth() {
-  const redirectUri = AuthSession.makeRedirectUri({
-    scheme: Platform.OS === 'web' ? undefined : 'calify',
-    path: 'auth/callback',
-  });
+  // On web: use the bare origin (e.g. http://localhost:8081) so Google
+  // redirects back to a real page where maybeCompleteAuthSession() runs.
+  // On native: use the custom scheme registered in app.json.
+  const redirectUri = Platform.OS === 'web'
+    ? AuthSession.makeRedirectUri({ preferLocalhost: true })
+    : AuthSession.makeRedirectUri({ scheme: 'calify', path: 'auth/callback' });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
     {
@@ -31,7 +30,7 @@ export function useGoogleAuth() {
       scopes: SCOPES,
       redirectUri,
       responseType: AuthSession.ResponseType.Code,
-      usePKCE: true,
+      usePKCE: false,
     },
     discovery
   );

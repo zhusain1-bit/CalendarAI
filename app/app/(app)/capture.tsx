@@ -7,12 +7,10 @@ import {
   TouchableOpacity,
   Image,
   ScrollView,
-  Alert,
   Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useMeetingStore } from '../../src/stores/meetingStore';
-import { useAuthStore } from '../../src/stores/authStore';
 import { pickImageFromLibrary, takePhotoWithCamera } from '../../src/utils/imageUtils';
 import type { PickedImage } from '../../src/utils/imageUtils';
 import Button from '../../src/components/ui/Button';
@@ -21,7 +19,6 @@ import LoadingOverlay from '../../src/components/ui/LoadingOverlay';
 export default function Capture() {
   const router = useRouter();
   const { extractFromImage, status, error } = useMeetingStore();
-  const { subscriptionStatus } = useAuthStore();
   const [selectedImage, setSelectedImage] = useState<PickedImage | null>(null);
   const isLoading = status === 'extracting';
 
@@ -37,18 +34,6 @@ export default function Capture() {
 
   async function handleExtract() {
     if (!selectedImage) return;
-
-    if (subscriptionStatus !== 'active') {
-      Alert.alert(
-        'Subscription Required',
-        'A subscription is required to extract meeting info from screenshots.',
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'View Plans', onPress: () => router.push(Platform.OS === 'web' ? '/pricing' : '/(app)/account') },
-        ]
-      );
-      return;
-    }
 
     await extractFromImage(selectedImage);
 

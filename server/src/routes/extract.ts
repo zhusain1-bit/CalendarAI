@@ -1,6 +1,4 @@
 import { Router } from 'express';
-import { requireAuth } from '../middleware/auth';
-import { requireSubscription } from '../middleware/requireSubscription';
 import { upload } from '../middleware/upload';
 import { extractMeetingFromImage } from '../services/claudeService';
 import { createError } from '../middleware/errorHandler';
@@ -9,8 +7,6 @@ const router = Router();
 
 router.post(
   '/',
-  requireAuth,
-  requireSubscription,
   upload.single('image'),
   async (req, res, next) => {
     try {
