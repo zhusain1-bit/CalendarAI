@@ -75,7 +75,7 @@ export default function Pricing() {
 
         <View style={styles.card}>
           <View style={styles.priceRow}>
-            <Text style={styles.price}>$9</Text>
+            <Text style={styles.price}>$4.99</Text>
             <View>
               <Text style={styles.period}>/month</Text>
               <Text style={styles.priceNote}>Cancel anytime</Text>
