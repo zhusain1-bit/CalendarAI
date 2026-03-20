@@ -7,6 +7,7 @@ import {
   StyleSheet,
   Platform,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 
@@ -16,6 +17,7 @@ interface Props {
   visible: boolean;
   onSelect: (provider: CalendarProvider) => void;
   onClose: () => void;
+  onConnectRequest?: () => void;
   loading?: boolean;
 }
 
@@ -61,15 +63,37 @@ const PROVIDERS: ProviderOption[] = [
   },
 ];
 
-export default function CalendarProviderSheet({ visible, onSelect, onClose, loading }: Props) {
+export default function CalendarProviderSheet({ visible, onSelect, onClose, onConnectRequest, loading }: Props) {
   const { googleAccessToken, microsoftAccessToken } = useAuthStore();
 
-  const availableProviders = PROVIDERS.filter((p) => {
-    if (p.nativeOnly && Platform.OS === 'web') return false;
-    if (p.id === 'google' && !googleAccessToken) return false;
-    if (p.id === 'outlook' && !microsoftAccessToken) return false;
+  function isConnected(id: CalendarProvider): boolean {
+    if (id === 'google') return !!googleAccessToken;
+    if (id === 'outlook') return !!microsoftAccessToken;
     return true;
-  });
+  }
+
+  const providers = PROVIDERS.filter((p) => !(p.nativeOnly && Platform.OS === 'web'));
+
+  function handlePress(provider: ProviderOption) {
+    if (!isConnected(provider.id)) {
+      Alert.alert(
+        `Connect ${provider.label}`,
+        `Sign in with ${provider.id === 'google' ? 'Google' : 'Microsoft'} from your Account settings to use this calendar.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Go to Account',
+            onPress: () => {
+              onClose();
+              onConnectRequest?.();
+            },
+          },
+        ]
+      );
+      return;
+    }
+    onSelect(provider.id);
+  }
 
   return (
     <Modal
@@ -89,21 +113,29 @@ export default function CalendarProviderSheet({ visible, onSelect, onClose, load
               <Text style={styles.loadingText}>Creating your event...</Text>
             </View>
           ) : (
-            availableProviders.map((provider) => (
-              <TouchableOpacity
-                key={provider.id}
-                style={styles.option}
-                onPress={() => onSelect(provider.id)}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.optionEmoji}>{provider.emoji}</Text>
-                <View style={styles.optionText}>
-                  <Text style={styles.optionLabel}>{provider.label}</Text>
-                  <Text style={styles.optionDesc}>{provider.description}</Text>
-                </View>
-                <Text style={styles.chevron}>›</Text>
-              </TouchableOpacity>
-            ))
+            providers.map((provider) => {
+              const connected = isConnected(provider.id);
+              return (
+                <TouchableOpacity
+                  key={provider.id}
+                  style={[styles.option, !connected && styles.optionDisconnected]}
+                  onPress={() => handlePress(provider)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.optionEmoji, !connected && styles.dimmed]}>{provider.emoji}</Text>
+                  <View style={styles.optionText}>
+                    <Text style={[styles.optionLabel, !connected && styles.dimmed]}>{provider.label}</Text>
+                    <Text style={styles.optionDesc}>
+                      {connected ? provider.description : 'Tap to connect account'}
+                    </Text>
+                  </View>
+                  {connected
+                    ? <Text style={styles.chevron}>›</Text>
+                    : <Text style={styles.connectBadge}>Connect</Text>
+                  }
+                </TouchableOpacity>
+              );
+            })
           )}
 
           <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
@@ -159,4 +191,15 @@ const styles = StyleSheet.create({
   cancelText: { fontSize: 16, color: '#6B7280', fontWeight: '500' },
   loadingBox: { alignItems: 'center', paddingVertical: 32, gap: 12 },
   loadingText: { fontSize: 15, color: '#374151' },
+  optionDisconnected: { opacity: 0.65 },
+  dimmed: { color: '#9CA3AF' },
+  connectBadge: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#0066FF',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
 });

@@ -116,6 +116,122 @@ router.post('/microsoft', async (req, res, next) => {
   }
 });
 
+// ─── Connect additional calendar provider (token-only, no user creation) ──────
+// Used when a signed-in user wants to link a second calendar provider.
+
+router.post('/connect/google', requireAuth, async (req, res, next) => {
+  try {
+    const { code, redirectUri } = req.body as { code: string; redirectUri: string };
+    if (!code || !redirectUri) {
+      return next(createError('Missing code or redirectUri', 400, 'BAD_REQUEST'));
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET,
+      redirectUri
+    );
+
+    const { tokens } = await oauth2Client.getToken(code);
+    res.json({ accessToken: tokens.access_token, refreshToken: tokens.refresh_token ?? null });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ─── Refresh Google access token ──────────────────────────────────────────────
+
+router.post('/refresh/google', requireAuth, async (req, res, next) => {
+  try {
+    const { refreshToken } = req.body as { refreshToken: string };
+    if (!refreshToken) {
+      return next(createError('refreshToken is required', 400, 'BAD_REQUEST'));
+    }
+
+    const oauth2Client = new google.auth.OAuth2(
+      process.env.GOOGLE_CLIENT_ID,
+      process.env.GOOGLE_CLIENT_SECRET
+    );
+    oauth2Client.setCredentials({ refresh_token: refreshToken });
+
+    const { credentials } = await oauth2Client.refreshAccessToken();
+    if (!credentials.access_token) {
+      return next(createError('Could not refresh Google token', 401, 'GOOGLE_TOKEN_EXPIRED'));
+    }
+
+    res.json({ accessToken: credentials.access_token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/connect/microsoft', requireAuth, async (req, res, next) => {
+  try {
+    const { code, redirectUri } = req.body as { code: string; redirectUri: string };
+    if (!code || !redirectUri) {
+      return next(createError('Missing code or redirectUri', 400, 'BAD_REQUEST'));
+    }
+
+    const tokenRes = await fetch(
+      `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID ?? 'common'}/oauth2/v2.0/token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          client_id: process.env.MICROSOFT_CLIENT_ID!,
+          client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
+          code,
+          redirect_uri: redirectUri,
+          grant_type: 'authorization_code',
+          scope: 'openid profile email Calendars.ReadWrite',
+        }),
+      }
+    );
+
+    if (!tokenRes.ok) {
+      const errText = await tokenRes.text();
+      throw new Error(`Microsoft token exchange failed: ${errText}`);
+    }
+
+    const tokens = await tokenRes.json() as { access_token: string };
+    res.json({ accessToken: tokens.access_token });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.post('/connect/zoom', requireAuth, async (req, res, next) => {
+  try {
+    const { code, redirectUri } = req.body as { code: string; redirectUri: string };
+    if (!code || !redirectUri) {
+      return next(createError('Missing code or redirectUri', 400, 'BAD_REQUEST'));
+    }
+
+    const tokenRes = await fetch('https://zoom.us/oauth/token', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${Buffer.from(`${process.env.ZOOM_CLIENT_ID}:${process.env.ZOOM_CLIENT_SECRET}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        grant_type: 'authorization_code',
+        code,
+        redirect_uri: redirectUri,
+      }),
+    });
+
+    if (!tokenRes.ok) {
+      const text = await tokenRes.text();
+      throw new Error(`Zoom token exchange failed: ${text}`);
+    }
+
+    const tokens = await tokenRes.json() as { access_token: string };
+    res.json({ accessToken: tokens.access_token });
+  } catch (err) {
+    next(err);
+  }
+});
+
 // ─── Get current user + subscription status ───────────────────────────────────
 
 router.get('/me', requireAuth, async (req, res, next) => {

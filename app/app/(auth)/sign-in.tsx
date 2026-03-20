@@ -8,7 +8,7 @@ import {
   Image,
   Platform,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, Link } from 'expo-router';
 import * as AuthSession from 'expo-auth-session';
 import { useGoogleAuth } from '../../src/services/googleAuth';
 import { useMicrosoftAuth } from '../../src/services/microsoftAuth';
@@ -50,12 +50,14 @@ export default function SignIn() {
       const data = await api.post<{
         token: string;
         accessToken: string;
+        refreshToken?: string | null;
         user: any;
       }>('/auth/google', { code, redirectUri: googleRedirectUri });
 
       await setCredentials({
         token: data.token,
         accessToken: data.accessToken,
+        refreshToken: data.refreshToken,
         provider: 'google',
         user: data.user,
       });
@@ -138,8 +140,11 @@ export default function SignIn() {
         </View>
 
         <Text style={styles.legal}>
-          By continuing, you agree to our Terms of Service and Privacy Policy.
-          Signing in enables calendar sync and event history.
+          By continuing, you agree to our{' '}
+          <Link href="/terms" style={styles.legalLink}>Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" style={styles.legalLink}>Privacy Policy</Link>.
+          {' '}Signing in enables calendar sync and event history.
         </Text>
       </View>
 
@@ -178,4 +183,5 @@ const styles = StyleSheet.create({
     lineHeight: 17,
     marginTop: 16,
   },
+  legalLink: { color: '#6B7280', textDecorationLine: 'underline' },
 });

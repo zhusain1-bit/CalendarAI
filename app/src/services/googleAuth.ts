@@ -14,6 +14,7 @@ const SCOPES = [
   'profile',
   'email',
   'https://www.googleapis.com/auth/calendar.events',
+  'https://www.googleapis.com/auth/calendar.readonly',
 ];
 
 export function useGoogleAuth() {

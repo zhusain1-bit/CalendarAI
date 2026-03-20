@@ -1,39 +1,89 @@
 import { Router } from 'express';
+import { requireAuth } from '../middleware/auth';
 import { createGoogleCalendarEvent } from '../services/googleCalService';
 import { createOutlookCalendarEvent } from '../services/outlookCalService';
+import { createZoomMeeting } from '../services/zoomService';
 import { createError } from '../middleware/errorHandler';
 import type { MeetingExtraction } from '../services/claudeService';
 
 const router = Router();
+
+router.use(requireAuth);
 
 router.post('/create', async (req, res, next) => {
   try {
     const {
       provider,
       accessToken,
-      meeting,
+      meeting: rawMeeting,
+      conferenceType,
+      zoomAccessToken,
     } = req.body as {
       provider: 'google' | 'outlook';
       accessToken: string;
       meeting: MeetingExtraction;
+      conferenceType?: 'meet' | 'zoom';
+      zoomAccessToken?: string;
     };
+
+    let meeting: MeetingExtraction = rawMeeting;
 
     if (!provider || !accessToken || !meeting) {
       return next(createError('provider, accessToken, and meeting are required', 400, 'BAD_REQUEST'));
     }
 
-    let result: { eventId: string; eventUrl: string };
+    if (conferenceType === 'zoom' && !zoomAccessToken) {
+      return next(createError('zoomAccessToken is required when conferenceType is zoom', 400, 'BAD_REQUEST'));
+    }
+
+    let zoomConferenceLink: string | undefined;
+
+    if (conferenceType === 'zoom') {
+      const startTimeIso = meeting.date && meeting.startTime
+        ? `${meeting.date}T${meeting.startTime}:00`
+        : null;
+      const zoomResult = await createZoomMeeting(
+        zoomAccessToken!,
+        meeting.title,
+        startTimeIso,
+        60,
+        meeting.timezone
+      );
+      zoomConferenceLink = zoomResult.joinUrl;
+
+      // Embed zoom link into meeting description and location
+      const zoomSuffix = `(Zoom: ${zoomResult.joinUrl})`;
+      meeting = {
+        ...meeting,
+        location: meeting.location ?? zoomResult.joinUrl,
+        description: meeting.description
+          ? `${meeting.description}\n${zoomSuffix}`
+          : zoomSuffix,
+      };
+    }
+
+    let result: { eventId: string; eventUrl: string; conferenceLink?: string };
 
     if (provider === 'google') {
-      result = await createGoogleCalendarEvent(accessToken, meeting);
+      result = await createGoogleCalendarEvent(
+        accessToken,
+        meeting,
+        conferenceType === 'meet' ? 'meet' : undefined
+      );
     } else if (provider === 'outlook') {
       result = await createOutlookCalendarEvent(accessToken, meeting);
     } else {
       return next(createError(`Unsupported provider: ${provider}`, 400, 'BAD_REQUEST'));
     }
 
-    res.json(result);
-  } catch (err) {
+    res.json({
+      ...result,
+      conferenceLink: result.conferenceLink ?? zoomConferenceLink ?? undefined,
+    });
+  } catch (err: any) {
+    if (err?.response?.status === 401 || err?.status === 401 || err?.code === 401) {
+      return next(createError('Google access token expired. Please reconnect your Google account.', 401, 'GOOGLE_TOKEN_EXPIRED'));
+    }
     next(err);
   }
 });

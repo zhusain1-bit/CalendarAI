@@ -6,17 +6,20 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "android": { "buildType": "apk" },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "http://localhost:3001"
       }
     },
     "preview": {
       "distribution": "internal",
+      "android": { "buildType": "apk" },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://calify-api.railway.app"
       }
     },
     "production": {
+      "android": { "buildType": "app-bundle" },
       "env": {
         "EXPO_PUBLIC_API_BASE_URL": "https://calify-api.railway.app"
       }
@@ -24,11 +27,6 @@
   },
   "submit": {
     "production": {
-      "ios": {
-        "appleId": "your@email.com",
-        "ascAppId": "YOUR_APP_STORE_CONNECT_APP_ID",
-        "appleTeamId": "YOUR_APPLE_TEAM_ID"
-      },
       "android": {
         "serviceAccountKeyPath": "./play-store-service-account.json",
         "track": "production"

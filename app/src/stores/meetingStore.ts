@@ -47,6 +47,7 @@ interface MeetingState {
   historyLoading: boolean;
 
   extractFromImage: (image: PickedImage) => Promise<void>;
+  extractFromText: (text: string) => Promise<void>;
   updateCurrentMeeting: (data: Partial<MeetingData>) => void;
   resetExtraction: () => void;
 
@@ -69,7 +70,27 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
       const result = await api.upload<{ meeting: MeetingData }>('/extract', formData);
       set({ status: 'extracted', currentMeeting: result.meeting });
     } catch (err: any) {
-      set({ status: 'error', error: err.message ?? 'Extraction failed' });
+      set({
+        status: 'error',
+        error: err.code === 'SUBSCRIPTION_REQUIRED'
+          ? err.message
+          : (err.code === 'UNAUTHORIZED' ? 'Sign in to extract meeting details.' : (err.message ?? 'Extraction failed')),
+      });
+    }
+  },
+
+  extractFromText: async (text) => {
+    set({ status: 'extracting', error: null });
+    try {
+      const result = await api.post<{ meeting: MeetingData }>('/extract/text', { text });
+      set({ status: 'extracted', currentMeeting: result.meeting });
+    } catch (err: any) {
+      set({
+        status: 'error',
+        error: err.code === 'SUBSCRIPTION_REQUIRED'
+          ? err.message
+          : (err.code === 'UNAUTHORIZED' ? 'Sign in to extract meeting details.' : (err.message ?? 'Extraction failed')),
+      });
     }
   },
 

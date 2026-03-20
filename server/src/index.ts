@@ -10,6 +10,7 @@ import eventsRouter from './routes/events';
 import calendarRouter from './routes/calendar';
 import icsRouter from './routes/ics';
 import billingRouter from './routes/billing';
+import availabilityRouter from './routes/availability';
 import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/events', eventsRouter);
 app.use('/calendar', calendarRouter);
 app.use('/ics', icsRouter);
 app.use('/billing', billingRouter);
+app.use('/availability', extractLimiter, availabilityRouter);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 

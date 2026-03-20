@@ -17,6 +17,7 @@
     "expo-auth-session": "~55.0.8",
     "expo-calendar": "~55.0.4",
     "expo-camera": "~55.0.10",
+    "expo-clipboard": "~55.0.9",
     "expo-constants": "~55.0.8",
     "expo-crypto": "~55.0.2",
     "expo-file-system": "~55.0.11",

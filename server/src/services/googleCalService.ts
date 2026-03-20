@@ -15,11 +15,13 @@ function buildDateTime(date: string | null, time: string | null, timezone: strin
 export interface CreateEventResult {
   eventId: string;
   eventUrl: string;
+  conferenceLink?: string;
 }
 
 export async function createGoogleCalendarEvent(
   accessToken: string,
-  meeting: MeetingExtraction
+  meeting: MeetingExtraction,
+  conferenceType?: 'meet'
 ): Promise<CreateEventResult> {
   const auth = new google.auth.OAuth2();
   auth.setCredentials({ access_token: accessToken });
@@ -43,6 +45,7 @@ export async function createGoogleCalendarEvent(
   const event = await calendar.events.insert({
     calendarId: 'primary',
     sendUpdates: 'all',
+    ...(conferenceType === 'meet' ? { conferenceDataVersion: 1 } : {}),
     requestBody: {
       summary: meeting.title,
       location: meeting.location ?? undefined,
@@ -50,11 +53,22 @@ export async function createGoogleCalendarEvent(
       start: start ?? { date: new Date().toISOString().split('T')[0] },
       end: end ?? { date: new Date().toISOString().split('T')[0] },
       attendees,
+      ...(conferenceType === 'meet'
+        ? {
+            conferenceData: {
+              createRequest: {
+                requestId: `calify-${Date.now()}`,
+                conferenceSolutionKey: { type: 'hangoutsMeet' },
+              },
+            },
+          }
+        : {}),
     },
   });
 
   return {
     eventId: event.data.id!,
     eventUrl: event.data.htmlLink!,
+    conferenceLink: event.data.hangoutLink ?? undefined,
   };
 }

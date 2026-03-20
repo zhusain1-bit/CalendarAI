@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,8 +12,13 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
+import { useSettingsStore, formatDuration, type DurationOption, type TimeFormat, type DefaultProvider } from '../../src/stores/settingsStore';
+import { useGoogleAuth } from '../../src/services/googleAuth';
+import { useMicrosoftAuth } from '../../src/services/microsoftAuth';
+import { useZoomAuth } from '../../src/services/zoomAuth';
 import Button from '../../src/components/ui/Button';
 import Card from '../../src/components/ui/Card';
+import TimezonePickerField from '../../src/components/ui/TimezonePickerField';
 import { openStripeCheckout, openStripeBillingPortal } from '../../src/services/stripe';
 import { getOfferings, purchasePackage } from '../../src/services/revenueCat';
 
@@ -26,8 +31,75 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 
 export default function Account() {
   const router = useRouter();
-  const { user, subscriptionStatus, subscriptionPeriodEnd, signOut, refreshMe } = useAuthStore() as any;
+  const { user, subscriptionStatus, googleAccessToken, microsoftAccessToken, zoomAccessToken, connectCalendar, disconnectCalendar, signOut, refreshMe } = useAuthStore() as any;
+  const { defaultMeetingDuration, timeFormat, defaultTimezone, defaultCalendarProvider, updateSettings } = useSettingsStore();
   const [loading, setLoading] = useState(false);
+  const [calendarLoading, setCalendarLoading] = useState<'google' | 'microsoft' | 'zoom' | null>(null);
+
+  const connectingRef = useRef<'google' | 'microsoft' | 'zoom' | null>(null);
+
+  const { request: googleRequest, response: googleResponse, promptAsync: promptGoogle, redirectUri: googleRedirectUri } = useGoogleAuth();
+  const { request: msRequest, response: msResponse, promptAsync: promptMicrosoft, redirectUri: msRedirectUri } = useMicrosoftAuth();
+  const { request: zoomRequest, response: zoomResponse, promptAsync: promptZoom, redirectUri: zoomRedirectUri } = useZoomAuth();
+
+  useEffect(() => {
+    if (googleResponse?.type === 'success' && connectingRef.current === 'google') {
+      connectingRef.current = null;
+      handleConnectCode('google', googleResponse.params.code, googleRedirectUri);
+    }
+  }, [googleResponse]);
+
+  useEffect(() => {
+    if (msResponse?.type === 'success' && connectingRef.current === 'microsoft') {
+      connectingRef.current = null;
+      handleConnectCode('microsoft', msResponse.params.code, msRedirectUri);
+    }
+  }, [msResponse]);
+
+  useEffect(() => {
+    if (zoomResponse?.type === 'success' && connectingRef.current === 'zoom') {
+      connectingRef.current = null;
+      handleConnectCode('zoom', zoomResponse.params.code, zoomRedirectUri);
+    }
+  }, [zoomResponse]);
+
+  async function handleConnectCode(provider: 'google' | 'microsoft' | 'zoom', code: string, redirectUri: string) {
+    setCalendarLoading(provider);
+    try {
+      await connectCalendar(provider, code, redirectUri);
+      const label = provider === 'google' ? 'Google Calendar' : provider === 'microsoft' ? 'Microsoft Outlook' : 'Zoom';
+      Alert.alert('Connected!', `Your ${label} is now linked.`);
+    } catch (err: any) {
+      Alert.alert('Connection failed', err.message ?? 'Could not connect calendar');
+    } finally {
+      setCalendarLoading(null);
+    }
+  }
+
+  function handleConnectCalendar(provider: 'google' | 'microsoft' | 'zoom') {
+    connectingRef.current = provider;
+    if (provider === 'google') promptGoogle();
+    else if (provider === 'microsoft') promptMicrosoft();
+    else promptZoom();
+  }
+
+  function handleDisconnectCalendar(provider: 'google' | 'microsoft' | 'zoom') {
+    const label = provider === 'google' ? 'Google Calendar' : provider === 'microsoft' ? 'Microsoft Outlook' : 'Zoom';
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove your ${label} connection?`)) {
+        disconnectCalendar(provider);
+      }
+      return;
+    }
+    Alert.alert(`Disconnect ${label}`, `Remove your ${label} connection?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Disconnect',
+        style: 'destructive',
+        onPress: () => disconnectCalendar(provider),
+      },
+    ]);
+  }
 
   const statusInfo = STATUS_LABELS[subscriptionStatus] ?? STATUS_LABELS.none;
 
@@ -77,6 +149,13 @@ export default function Account() {
   }
 
   async function handleSignOut() {
+    if (Platform.OS === 'web') {
+      if (window.confirm('Are you sure you want to sign out?')) {
+        await signOut();
+        router.replace('/(auth)/sign-in');
+      }
+      return;
+    }
     Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -123,6 +202,156 @@ export default function Account() {
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{user.name ?? 'User'}</Text>
               <Text style={styles.profileEmail}>{user.email}</Text>
+            </View>
+          </View>
+        </Card>
+
+        {/* Connected Calendars */}
+        <Card style={styles.subCard}>
+          <Text style={styles.sectionLabel}>Connected Calendars</Text>
+
+          <View style={styles.calendarRow}>
+            <Text style={styles.calendarLabel}>📅 Google Calendar</Text>
+            {googleAccessToken ? (
+              <View style={styles.calendarActions}>
+                <View style={styles.connectedBadge}>
+                  <Text style={styles.connectedText}>Connected</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDisconnectCalendar('google')}>
+                  <Text style={styles.disconnectText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Button
+                label={calendarLoading === 'google' ? 'Connecting…' : 'Connect'}
+                onPress={() => handleConnectCalendar('google')}
+                variant="secondary"
+                disabled={!googleRequest || calendarLoading !== null}
+                style={styles.connectBtn}
+              />
+            )}
+          </View>
+
+          <View style={[styles.calendarRow, styles.calendarRowBorder]}>
+            <Text style={styles.calendarLabel}>📆 Microsoft Outlook</Text>
+            {microsoftAccessToken ? (
+              <View style={styles.calendarActions}>
+                <View style={styles.connectedBadge}>
+                  <Text style={styles.connectedText}>Connected</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDisconnectCalendar('microsoft')}>
+                  <Text style={styles.disconnectText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Button
+                label={calendarLoading === 'microsoft' ? 'Connecting…' : 'Connect'}
+                onPress={() => handleConnectCalendar('microsoft')}
+                variant="secondary"
+                disabled={!msRequest || calendarLoading !== null}
+                style={styles.connectBtn}
+              />
+            )}
+          </View>
+
+          <View style={[styles.calendarRow, styles.calendarRowBorder]}>
+            <Text style={styles.calendarLabel}>📹 Zoom</Text>
+            {zoomAccessToken ? (
+              <View style={styles.calendarActions}>
+                <View style={styles.connectedBadge}>
+                  <Text style={styles.connectedText}>Connected</Text>
+                </View>
+                <TouchableOpacity onPress={() => handleDisconnectCalendar('zoom')}>
+                  <Text style={styles.disconnectText}>Remove</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <Button
+                label={calendarLoading === 'zoom' ? 'Connecting…' : 'Connect'}
+                onPress={() => handleConnectCalendar('zoom')}
+                variant="secondary"
+                disabled={!zoomRequest || calendarLoading !== null}
+                style={styles.connectBtn}
+              />
+            )}
+          </View>
+        </Card>
+
+        {/* Settings */}
+        <Card style={styles.subCard}>
+          <Text style={styles.sectionLabel}>Preferences</Text>
+
+          {/* Default meeting duration */}
+          <View style={styles.settingRow}>
+            <Text style={styles.settingLabel}>Default meeting duration</Text>
+            <View style={styles.chipRow}>
+              {([15, 30, 45, 60, 90, 120] as DurationOption[]).map((d) => {
+                const selected = defaultMeetingDuration === d;
+                return (
+                  <TouchableOpacity
+                    key={d}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => updateSettings({ defaultMeetingDuration: d })}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                      {formatDuration(d)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Time format */}
+          <View style={[styles.settingRow, styles.settingBorder]}>
+            <Text style={styles.settingLabel}>Time format</Text>
+            <View style={styles.chipRow}>
+              {(['12h', '24h'] as TimeFormat[]).map((f) => {
+                const selected = timeFormat === f;
+                return (
+                  <TouchableOpacity
+                    key={f}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => updateSettings({ timeFormat: f })}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>
+                      {f === '12h' ? '12h AM/PM' : '24-hour'}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
+          {/* Default timezone */}
+          <View style={[styles.settingRow, styles.settingBorder]}>
+            <TimezonePickerField
+              label="Default timezone"
+              value={defaultTimezone}
+              onChange={(tz) => updateSettings({ defaultTimezone: tz ?? Intl.DateTimeFormat().resolvedOptions().timeZone })}
+            />
+          </View>
+
+          {/* Default calendar provider */}
+          <View style={[styles.settingRow, styles.settingBorder]}>
+            <Text style={styles.settingLabel}>Default calendar</Text>
+            <View style={styles.chipRow}>
+              {([null, 'google', 'outlook'] as DefaultProvider[]).map((p) => {
+                const selected = defaultCalendarProvider === p;
+                const label = p === null ? 'Ask me' : p === 'google' ? 'Google' : 'Outlook';
+                return (
+                  <TouchableOpacity
+                    key={String(p)}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => updateSettings({ defaultCalendarProvider: p })}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
         </Card>
@@ -197,4 +426,40 @@ const styles = StyleSheet.create({
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   emptyEmoji: { fontSize: 48 },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#374151' },
+  calendarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+  },
+  calendarRowBorder: {
+    borderTopWidth: 1,
+    borderTopColor: '#F3F4F6',
+  },
+  calendarLabel: { fontSize: 15, fontWeight: '500', color: '#374151', flex: 1 },
+  calendarActions: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  connectedBadge: {
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  connectedText: { fontSize: 12, fontWeight: '600', color: '#059669' },
+  disconnectText: { fontSize: 13, color: '#EF4444', fontWeight: '500' },
+  connectBtn: { paddingHorizontal: 14, paddingVertical: 6, minHeight: 0 },
+  settingRow: { paddingVertical: 14 },
+  settingBorder: { borderTopWidth: 1, borderTopColor: '#F3F4F6' },
+  settingLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 10 },
+  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    backgroundColor: '#F9FAFB',
+  },
+  chipSelected: { backgroundColor: '#0066FF', borderColor: '#0066FF' },
+  chipText: { fontSize: 13, fontWeight: '500', color: '#374151' },
+  chipTextSelected: { color: '#FFFFFF' },
 });

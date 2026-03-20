@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Platform } from 'react-native';
 import TextInput from './ui/TextInput';
+import DatePickerField from './ui/DatePickerField';
+import TimePickerField from './ui/TimePickerField';
+import TimezonePickerField from './ui/TimezonePickerField';
 import AttendeeRow from './ui/AttendeeRow';
 import type { MeetingData, Attendee } from '../stores/meetingStore';
 
@@ -46,35 +49,31 @@ export default function MeetingForm({ meeting, onChange }: Props) {
       />
 
       <View style={styles.row}>
-        <TextInput
+        <DatePickerField
           label="Date"
-          value={meeting.date ?? ''}
-          onChangeText={(v) => update('date', v || null)}
-          placeholder="YYYY-MM-DD"
+          value={meeting.date}
+          onChange={(v) => update('date', v)}
           containerStyle={styles.half}
         />
-        <TextInput
+        <TimezonePickerField
           label="Timezone"
-          value={meeting.timezone ?? ''}
-          onChangeText={(v) => update('timezone', v || null)}
-          placeholder="e.g. America/New_York"
+          value={meeting.timezone}
+          onChange={(v) => update('timezone', v)}
           containerStyle={styles.half}
         />
       </View>
 
       <View style={styles.row}>
-        <TextInput
+        <TimePickerField
           label="Start Time"
-          value={meeting.startTime ?? ''}
-          onChangeText={(v) => update('startTime', v || null)}
-          placeholder="HH:MM"
+          value={meeting.startTime}
+          onChange={(v) => update('startTime', v)}
           containerStyle={styles.half}
         />
-        <TextInput
+        <TimePickerField
           label="End Time"
-          value={meeting.endTime ?? ''}
-          onChangeText={(v) => update('endTime', v || null)}
-          placeholder="HH:MM"
+          value={meeting.endTime}
+          onChange={(v) => update('endTime', v)}
           containerStyle={styles.half}
         />
       </View>

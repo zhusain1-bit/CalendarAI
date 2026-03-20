@@ -121,6 +121,12 @@ export default function LandingPage() {
           <TouchableOpacity onPress={() => router.push('/about')}>
             <Text style={styles.footerLink}>About</Text>
           </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/privacy')}>
+            <Text style={styles.footerLink}>Privacy</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => router.push('/terms')}>
+            <Text style={styles.footerLink}>Terms</Text>
+          </TouchableOpacity>
         </View>
         <Text style={styles.footerCopy}>© 2026 Calify. All rights reserved.</Text>
       </View>

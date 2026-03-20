@@ -22,7 +22,7 @@ const PROVIDER_NAMES: Record<string, string> = {
 
 export default function Success() {
   const router = useRouter();
-  const { provider, eventUrl } = useLocalSearchParams<{ provider: string; eventUrl: string }>();
+  const { provider, eventUrl, conferenceLink } = useLocalSearchParams<{ provider: string; eventUrl: string; conferenceLink: string }>();
   const { currentMeeting, resetExtraction } = useMeetingStore();
 
   const providerName = PROVIDER_NAMES[provider ?? ''] ?? 'your calendar';
@@ -50,7 +50,8 @@ export default function Success() {
           <Text style={styles.title}>Event Created!</Text>
           <Text style={styles.subtitle}>
             Your meeting has been added to {providerName}.
-            {'\n'}Attendees have been notified.
+            {(provider === 'google' || provider === 'outlook') && '\nInvites sent to attendees.'}
+            {conferenceLink ? '\nVideo conference link included.' : ''}
           </Text>
         </View>
 
@@ -60,6 +61,15 @@ export default function Success() {
               label={`Open in ${providerName}`}
               onPress={handleOpenEvent}
               variant="primary"
+              fullWidth
+            />
+          ) : null}
+
+          {conferenceLink ? (
+            <Button
+              label={provider === 'zoom' ? 'Join Zoom Meeting' : 'Join Google Meet'}
+              onPress={() => Linking.openURL(conferenceLink)}
+              variant="secondary"
               fullWidth
             />
           ) : null}

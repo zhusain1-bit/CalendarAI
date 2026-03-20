@@ -4,6 +4,7 @@ import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import * as WebBrowser from 'expo-web-browser';
 import { useAuthStore } from '../src/stores/authStore';
+import { useSettingsStore } from '../src/stores/settingsStore';
 import { initRevenueCat } from '../src/services/revenueCat';
 
 // Completes any in-progress auth session when the app (or popup) loads.
@@ -12,10 +13,12 @@ WebBrowser.maybeCompleteAuthSession();
 
 export default function RootLayout() {
   const loadFromStorage = useAuthStore((s) => s.loadFromStorage);
+  const loadSettings = useSettingsStore((s) => s.loadFromStorage);
 
   useEffect(() => {
     initRevenueCat();
     loadFromStorage();
+    loadSettings();
   }, []);
 
   return (

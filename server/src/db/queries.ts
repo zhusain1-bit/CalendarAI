@@ -1,4 +1,4 @@
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, sql, and } from 'drizzle-orm';
 import { db } from './client';
 import { users, subscriptions, events, type NewUser, type NewEvent } from './schema';
 
@@ -61,6 +61,14 @@ export async function upsertSubscription(data: {
 
 // ─── Events ───────────────────────────────────────────────────────────────────
 
+export async function countEventsByUser(userId: string): Promise<number> {
+  const result = await db
+    .select({ count: sql<number>`count(*)`.mapWith(Number) })
+    .from(events)
+    .where(eq(events.userId, userId));
+  return result[0]?.count ?? 0;
+}
+
 export async function createEvent(data: NewEvent) {
   const [event] = await db.insert(events).values(data).returning();
   return event;
@@ -92,5 +100,5 @@ export async function updateEvent(id: string, userId: string, data: Partial<NewE
 export async function deleteEvent(id: string, userId: string) {
   await db
     .delete(events)
-    .where(eq(events.id, id));
+    .where(and(eq(events.id, id), eq(events.userId, userId)));
 }

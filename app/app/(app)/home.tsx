@@ -36,7 +36,7 @@ export default function Home() {
             <Text style={styles.greeting}>
               {user ? `Hey, ${user.name?.split(' ')[0] ?? 'there'} 👋` : 'Hey there 👋'}
             </Text>
-            <Text style={styles.subtitle}>Turn any screenshot into a calendar event</Text>
+            <Text style={styles.subtitle}>Add meetings or suggest your availability</Text>
           </View>
           <Text style={styles.logo}>📅</Text>
         </View>
@@ -46,7 +46,7 @@ export default function Home() {
           <SubscriptionBanner />
         )}
 
-        {/* Main CTA */}
+        {/* Main CTAs */}
         <TouchableOpacity
           style={styles.cta}
           onPress={() => router.push('/(app)/capture')}
@@ -55,6 +55,19 @@ export default function Home() {
           <Text style={styles.ctaEmoji}>📸</Text>
           <Text style={styles.ctaTitle}>Add Meeting from Screenshot</Text>
           <Text style={styles.ctaSubtitle}>Pick a photo or take a new one</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.ctaSecondary}
+          onPress={() => router.push({ pathname: '/(app)/capture', params: { mode: 'suggest' } })}
+          activeOpacity={0.9}
+        >
+          <Text style={styles.ctaSecondaryEmoji}>📆</Text>
+          <View style={styles.ctaSecondaryText}>
+            <Text style={styles.ctaSecondaryTitle}>Suggest My Availability</Text>
+            <Text style={styles.ctaSecondarySubtitle}>Screenshot a request → get a reply with your free times</Text>
+          </View>
+          <Text style={styles.ctaSecondaryChevron}>›</Text>
         </TouchableOpacity>
 
         {/* Recent events */}
@@ -121,4 +134,24 @@ const styles = StyleSheet.create({
   emptyEmoji: { fontSize: 48 },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#374151' },
   emptyText: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20, maxWidth: 280 },
+  ctaSecondary: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  ctaSecondaryEmoji: { fontSize: 28 },
+  ctaSecondaryText: { flex: 1 },
+  ctaSecondaryTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  ctaSecondarySubtitle: { fontSize: 13, color: '#6B7280', marginTop: 2, lineHeight: 18 },
+  ctaSecondaryChevron: { fontSize: 22, color: '#9CA3AF' },
 });
