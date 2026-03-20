@@ -12,7 +12,7 @@ const SCOPES = ['meeting:write:meeting'];
 
 export function useZoomAuth() {
   const redirectUri = Platform.OS === 'web'
-    ? AuthSession.makeRedirectUri({ preferLocalhost: true })
+    ? AuthSession.makeRedirectUri()
     : AuthSession.makeRedirectUri({ scheme: 'calify', path: 'auth/callback' });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(

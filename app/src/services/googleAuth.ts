@@ -18,11 +18,11 @@ const SCOPES = [
 ];
 
 export function useGoogleAuth() {
-  // On web: use the bare origin (e.g. http://localhost:8081) so Google
-  // redirects back to a real page where maybeCompleteAuthSession() runs.
+  // On web: use the current origin so the redirect URI matches in both
+  // local dev (http://localhost:8081) and production (https://calify.app).
   // On native: use the custom scheme registered in app.json.
   const redirectUri = Platform.OS === 'web'
-    ? AuthSession.makeRedirectUri({ preferLocalhost: true })
+    ? AuthSession.makeRedirectUri()
     : AuthSession.makeRedirectUri({ scheme: 'calify', path: 'auth/callback' });
 
   const [request, response, promptAsync] = AuthSession.useAuthRequest(
