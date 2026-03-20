@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { requireAuth } from '../middleware/auth';
-import { createCheckoutSession, stripe } from '../services/stripeService';
+import { createCheckoutSession, stripe as getStripe } from '../services/stripeService';
 import { upsertSubscription } from '../db/queries';
 import { createError } from '../middleware/errorHandler';
 import Stripe from 'stripe';
@@ -38,12 +38,12 @@ router.post('/portal', requireAuth, async (req, res, next) => {
     const { returnUrl } = req.body as { returnUrl: string };
 
     // Look up customer by email
-    const customers = await stripe.customers.list({ email: req.user!.email, limit: 1 });
+    const customers = await getStripe().customers.list({ email: req.user!.email, limit: 1 });
     if (!customers.data.length) {
       return next(createError('No Stripe customer found', 404, 'NOT_FOUND'));
     }
 
-    const session = await stripe.billingPortal.sessions.create({
+    const session = await getStripe().billingPortal.sessions.create({
       customer: customers.data[0].id,
       return_url: returnUrl,
     });
@@ -62,7 +62,7 @@ router.post(
     let event: Stripe.Event;
 
     try {
-      event = stripe.webhooks.constructEvent(
+      event = getStripe().webhooks.constructEvent(
         req.body as Buffer,
         sig,
         process.env.STRIPE_WEBHOOK_SECRET!

@@ -1,10 +1,20 @@
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-  apiVersion: '2025-02-24.acacia',
-});
+let _stripe: Stripe | null = null;
 
-export { stripe };
+function getStripe(): Stripe {
+  if (!_stripe) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-02-24.acacia',
+    });
+  }
+  return _stripe;
+}
+
+export { getStripe as stripe };
 
 export async function createCheckoutSession(
   userId: string,
@@ -12,7 +22,7 @@ export async function createCheckoutSession(
   successUrl: string,
   cancelUrl: string
 ): Promise<string> {
-  const session = await stripe.checkout.sessions.create({
+  const session = await getStripe().checkout.sessions.create({
     mode: 'subscription',
     customer_email: email,
     line_items: [
