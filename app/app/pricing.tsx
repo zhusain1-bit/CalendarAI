@@ -17,12 +17,13 @@ import Button from '../src/components/ui/Button';
 const FEATURES = [
   '✓ Unlimited meeting extractions',
   '✓ Google Calendar integration',
-  '✓ Outlook / Microsoft 365 integration',
-  '✓ Apple Calendar integration',
-  '✓ ICS file download',
+  '✓ Zoom meeting link generation',
+  '✓ ICS file download (works with Apple Calendar)',
+  '✓ Suggest My Availability — AI-drafted replies',
   '✓ Full event history',
   '✓ Edit & delete events',
-  '✓ Auto attendee invites',
+  '⏳ Outlook / Microsoft 365 — coming soon',
+  '⏳ Auto attendee invites — coming soon',
 ];
 
 export default function Pricing() {
