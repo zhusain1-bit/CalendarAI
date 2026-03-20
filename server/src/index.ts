@@ -15,8 +15,12 @@ import { errorHandler } from './middleware/errorHandler';
 
 const app = express();
 
+// ─── Trust Railway's proxy (required for express-rate-limit) ──────────────────
+app.set('trust proxy', 1);
+
 // ─── Security headers ─────────────────────────────────────────────────────────
-app.use(helmet());
+// Disable crossOriginOpenerPolicy so OAuth popups can communicate back
+app.use(helmet({ crossOriginOpenerPolicy: false }));
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').filter(Boolean);
