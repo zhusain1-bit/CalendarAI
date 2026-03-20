@@ -5,7 +5,7 @@ import { extractMeetingFromImage, extractMeetingFromText } from '../services/cla
 import { createError } from '../middleware/errorHandler';
 import { getActiveSubscription, countEventsByUser } from '../db/queries';
 
-const FREE_EXTRACTION_LIMIT = 3;
+const FREE_EXTRACTION_LIMIT = 10;
 
 async function checkPaywall(userId: string): Promise<boolean> {
   const sub = await getActiveSubscription(userId);
