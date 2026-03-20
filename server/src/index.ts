@@ -19,8 +19,21 @@ const app = express();
 app.set('trust proxy', 1);
 
 // ─── Security headers ─────────────────────────────────────────────────────────
-// Disable crossOriginOpenerPolicy so OAuth popups can communicate back
-app.use(helmet({ crossOriginOpenerPolicy: false }));
+// crossOriginOpenerPolicy disabled so OAuth popups can communicate back
+app.use(helmet({
+  crossOriginOpenerPolicy: false,
+  // X-Content-Type-Options: nosniff — prevent MIME-type sniffing
+  noSniff: true,
+  // Referrer-Policy: strict-origin-when-cross-origin
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  // Content-Security-Policy — API-only server, block all document rendering
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'none'"],
+      frameAncestors: ["'none'"],
+    },
+  },
+}));
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = (process.env.ALLOWED_ORIGINS ?? '').split(',').filter(Boolean);
