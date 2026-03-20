@@ -24,21 +24,23 @@ export default function History() {
     if (user) loadHistory();
   }, [user]);
 
-  const handleDelete = useCallback((event: SavedEvent) => {
-    if (Platform.OS === 'web') {
-      if (window.confirm(`Remove "${event.title}" from your history?`)) {
-        deleteEvent(event.id);
-      }
-      return;
+  const handleDelete = useCallback(async (event: SavedEvent) => {
+    const confirmed = Platform.OS === 'web'
+      ? window.confirm(`Remove "${event.title}" from your history?`)
+      : await new Promise<boolean>((resolve) =>
+          Alert.alert('Delete Event', `Remove "${event.title}" from your history?`, [
+            { text: 'Cancel', style: 'cancel', onPress: () => resolve(false) },
+            { text: 'Delete', style: 'destructive', onPress: () => resolve(true) },
+          ])
+        );
+    if (!confirmed) return;
+    try {
+      await deleteEvent(event.id);
+    } catch (err: any) {
+      const msg = err.message ?? 'Could not delete event';
+      if (Platform.OS === 'web') window.alert(msg);
+      else Alert.alert('Error', msg);
     }
-    Alert.alert(
-      'Delete Event',
-      `Remove "${event.title}" from your history?`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', style: 'destructive', onPress: () => deleteEvent(event.id) },
-      ]
-    );
   }, [deleteEvent]);
 
   const handleEdit = useCallback((event: SavedEvent) => {
