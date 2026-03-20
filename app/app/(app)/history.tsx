@@ -8,6 +8,7 @@ import {
   Alert,
   RefreshControl,
   Linking,
+  Platform,
 } from 'react-native';
 import { useMeetingStore, type SavedEvent } from '../../src/stores/meetingStore';
 import { useAuthStore } from '../../src/stores/authStore';
@@ -24,16 +25,18 @@ export default function History() {
   }, [user]);
 
   const handleDelete = useCallback((event: SavedEvent) => {
+    if (Platform.OS === 'web') {
+      if (window.confirm(`Remove "${event.title}" from your history?`)) {
+        deleteEvent(event.id);
+      }
+      return;
+    }
     Alert.alert(
       'Delete Event',
       `Remove "${event.title}" from your history?`,
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete',
-          style: 'destructive',
-          onPress: () => deleteEvent(event.id),
-        },
+        { text: 'Delete', style: 'destructive', onPress: () => deleteEvent(event.id) },
       ]
     );
   }, [deleteEvent]);

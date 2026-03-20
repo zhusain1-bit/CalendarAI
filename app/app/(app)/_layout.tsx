@@ -49,7 +49,7 @@ export default function AppLayout() {
       <Tabs.Screen name="preview" options={{ href: null }} />
       <Tabs.Screen name="success" options={{ href: null }} />
       <Tabs.Screen name="availability-reply" options={{ href: null }} />
-      <Tabs.Screen name="event-edit" options={{ href: null }} />
+      <Tabs.Screen name="event-edit" options={{ href: null, tabBarItemStyle: { display: 'none' } }} />
     </Tabs>
   );
 }

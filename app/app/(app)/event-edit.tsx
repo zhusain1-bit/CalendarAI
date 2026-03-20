@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import {
   View, Text, TextInput, StyleSheet, SafeAreaView,
-  ScrollView, Alert, Platform,
+  ScrollView, Alert, Platform, TouchableOpacity,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMeetingStore } from '../../src/stores/meetingStore';
@@ -31,7 +31,7 @@ export default function EventEdit() {
 
   async function handleSave() {
     if (!title.trim()) {
-      Alert.alert('Title required', 'Please enter a title for the event.');
+      if (Platform.OS === 'web') { window.alert('Please enter a title for the event.'); } else { Alert.alert('Title required', 'Please enter a title for the event.'); }
       return;
     }
     setSaving(true);
@@ -45,7 +45,8 @@ export default function EventEdit() {
       });
       router.back();
     } catch (err: any) {
-      Alert.alert('Error', err.message ?? 'Could not save changes');
+      const msg = err.message ?? 'Could not save changes';
+      if (Platform.OS === 'web') { window.alert(msg); } else { Alert.alert('Error', msg); }
     } finally {
       setSaving(false);
     }
