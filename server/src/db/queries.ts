@@ -62,6 +62,7 @@ export async function upsertSubscription(data: {
 // ─── Events ───────────────────────────────────────────────────────────────────
 
 export async function countEventsByUser(userId: string): Promise<number> {
+  // Count ALL events including soft-deleted — prevents delete-to-bypass-paywall abuse
   const result = await db
     .select({ count: sql<number>`count(*)`.mapWith(Number) })
     .from(events)
@@ -76,7 +77,7 @@ export async function createEvent(data: NewEvent) {
 
 export async function getEventsByUser(userId: string, limit = 50) {
   return db.query.events.findMany({
-    where: eq(events.userId, userId),
+    where: (e, { and, isNull }) => and(eq(e.userId, userId), isNull(e.deletedAt)),
     orderBy: desc(events.createdAt),
     limit,
   });
@@ -99,6 +100,7 @@ export async function updateEvent(id: string, userId: string, data: Partial<NewE
 
 export async function deleteEvent(id: string, userId: string) {
   await db
-    .delete(events)
+    .update(events)
+    .set({ deletedAt: new Date() })
     .where(and(eq(events.id, id), eq(events.userId, userId)));
 }

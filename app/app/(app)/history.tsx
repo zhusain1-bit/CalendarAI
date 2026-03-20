@@ -17,7 +17,7 @@ import { useRouter } from 'expo-router';
 export default function History() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { history, historyLoading, loadHistory, deleteEvent } = useMeetingStore();
+  const { history, historyLoading, loadHistory, deleteEvent } = useMeetingStore() as any;
 
   useEffect(() => {
     if (user) loadHistory();
@@ -38,6 +38,10 @@ export default function History() {
     );
   }, [deleteEvent]);
 
+  const handleEdit = useCallback((event: SavedEvent) => {
+    router.push({ pathname: '/(app)/event-edit', params: { id: event.id } });
+  }, [router]);
+
   const renderItem = ({ item }: { item: SavedEvent }) => (
     <EventCard
       event={item}
@@ -46,6 +50,8 @@ export default function History() {
           Linking.openURL(item.calendarEventUrl);
         }
       }}
+      onEdit={() => handleEdit(item)}
+      onDelete={() => handleDelete(item)}
     />
   );
 

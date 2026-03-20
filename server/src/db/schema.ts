@@ -36,6 +36,7 @@ export const events = pgTable('events', {
   calendarEventUrl: text('calendar_event_url'),
   rawExtraction: jsonb('raw_extraction'),
   createdAt: timestamp('created_at').defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export type User = typeof users.$inferSelect;

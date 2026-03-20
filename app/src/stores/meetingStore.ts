@@ -53,6 +53,7 @@ interface MeetingState {
 
   loadHistory: () => Promise<void>;
   saveEvent: (data: Omit<SavedEvent, 'id' | 'userId' | 'createdAt'>) => Promise<SavedEvent>;
+  updateEvent: (id: string, data: Partial<Pick<SavedEvent, 'title' | 'date' | 'startTime' | 'endTime' | 'timezone' | 'location' | 'description'>>) => Promise<void>;
   deleteEvent: (id: string) => Promise<void>;
 }
 
@@ -119,6 +120,13 @@ export const useMeetingStore = create<MeetingState>((set, get) => ({
     const result = await api.post<{ event: SavedEvent }>('/events', data);
     set((state) => ({ history: [result.event, ...state.history] }));
     return result.event;
+  },
+
+  updateEvent: async (id, data) => {
+    const result = await api.patch<{ event: SavedEvent }>(`/events/${id}`, data);
+    set((state) => ({
+      history: state.history.map((e) => e.id === id ? { ...e, ...result.event } : e),
+    }));
   },
 
   deleteEvent: async (id) => {

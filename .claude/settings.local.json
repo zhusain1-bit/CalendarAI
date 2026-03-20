@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(head -20 grep -rn \"featureFlags\\\\|experiment\" C:/Users/zhusain1/CalendarAI/node_modules/react-native-screens/)",
+      "Bash(head -10 grep -rn \"useAuthRequest\\\\|useEffect\" C:/Users/zhusain1/CalendarAI/node_modules/expo-auth-session/src/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(curl:*)",
+      "Bash(npm run:*)",
+      "Bash(git push:*)",
+      "Bash(node:*)"
+    ]
+  }
+}
