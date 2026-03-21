@@ -449,16 +449,17 @@ export default function Account() {
           ) : (
             <>
               <Text style={styles.subDesc}>
-                Subscribe to create unlimited calendar events from screenshots.
+                Unlimited extractions, Google Calendar, Zoom links, Availability replies, and more.
               </Text>
               <Button
-                label="Subscribe — Unlock Full Access"
+                label="Subscribe — $4.99 / month →"
                 onPress={handleSubscribe}
                 variant="primary"
                 loading={loading}
                 fullWidth
                 style={{ marginTop: 12 }}
               />
+              <Text style={styles.subGuarantee}>30-day money-back guarantee · Cancel anytime</Text>
             </>
           )}
         </Card>
@@ -497,6 +498,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 13, color: '#9CA3AF', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   statusText: { fontSize: 17, fontWeight: '700' },
   subDesc: { fontSize: 14, color: '#6B7280', lineHeight: 20 },
+  subGuarantee: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 6 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 8 },
   emptyEmoji: { fontSize: 48 },
   emptyTitle: { fontSize: 17, fontWeight: '700', color: '#374151' },

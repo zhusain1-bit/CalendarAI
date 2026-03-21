@@ -59,14 +59,44 @@ export default function LandingPage() {
 
       {/* Hero */}
       <View style={styles.hero}>
-        <Text style={styles.heroEmoji}>📅</Text>
+        <Text style={styles.heroBadge}>AI-powered · Works with any app</Text>
         <Text style={styles.heroTitle}>
           Screenshot a message.{'\n'}Get a calendar invite.
         </Text>
         <Text style={styles.heroSubtitle}>
-          Calify uses AI to turn any screenshot into a calendar event — complete
-          with invites, location, and all the details. In seconds.
+          Calify reads any screenshot and creates a calendar event with the right date,
+          time, location, and attendees — in seconds.
         </Text>
+
+        {/* Product demo mockup */}
+        <View style={styles.demoWrap}>
+          <View style={styles.demoBubble}>
+            <Text style={styles.demoBubbleFrom}>iMessage · Sarah</Text>
+            <View style={styles.demoBubbleMsg}>
+              <Text style={styles.demoBubbleMsgText}>
+                "Hey! Lunch at Nobu Thursday at 1pm? 📍 145 W 67th St. Can you make it?"
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.demoArrowRow}>
+            <View style={styles.demoArrowLine} />
+            <Text style={styles.demoArrowLabel}>Calify AI</Text>
+            <View style={styles.demoArrowLine} />
+          </View>
+
+          <View style={styles.demoEvent}>
+            <View style={styles.demoEventHeader}>
+              <Text style={styles.demoEventIcon}>📅</Text>
+              <Text style={styles.demoEventBadge}>Added to Google Calendar</Text>
+            </View>
+            <Text style={styles.demoEventTitle}>Lunch with Sarah</Text>
+            <Text style={styles.demoEventMeta}>📆 Thursday, Mar 27 · 1:00 – 2:00 PM</Text>
+            <Text style={styles.demoEventMeta}>📍 145 W 67th St, New York</Text>
+            <Text style={styles.demoEventMeta}>👥 Invite sent to sarah@example.com</Text>
+          </View>
+        </View>
+
         <View style={styles.heroCtas}>
           <TouchableOpacity
             style={styles.primaryCta}
@@ -81,6 +111,7 @@ export default function LandingPage() {
             <Text style={styles.secondaryCtaText}>See Pricing</Text>
           </TouchableOpacity>
         </View>
+        <Text style={styles.heroNote}>5 free extractions · No credit card required</Text>
       </View>
 
       {/* Feature grid */}
@@ -161,11 +192,77 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 80,
-    maxWidth: 700,
+    paddingTop: 72,
+    paddingBottom: 80,
+    maxWidth: 720,
     gap: 20,
+    width: '100%',
   },
-  heroEmoji: { fontSize: 80 },
+  heroBadge: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#0066FF',
+    backgroundColor: '#EEF2FF',
+    paddingHorizontal: 14,
+    paddingVertical: 5,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  heroNote: { fontSize: 13, color: '#9CA3AF', marginTop: -4 },
+
+  demoWrap: {
+    width: '100%',
+    maxWidth: 480,
+    gap: 0,
+    marginVertical: 8,
+  },
+  demoBubble: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 16,
+    borderBottomLeftRadius: 4,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    gap: 8,
+  },
+  demoBubbleFrom: { fontSize: 11, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5 },
+  demoBubbleMsg: {
+    backgroundColor: '#E9F0FF',
+    borderRadius: 12,
+    padding: 12,
+  },
+  demoBubbleMsgText: { fontSize: 15, color: '#1E3A8A', lineHeight: 22 },
+
+  demoArrowRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+  demoArrowLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  demoArrowLabel: { fontSize: 12, fontWeight: '700', color: '#0066FF', backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20, overflow: 'hidden' },
+
+  demoEvent: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderTopLeftRadius: 4,
+    padding: 16,
+    borderWidth: 1.5,
+    borderColor: '#0066FF',
+    gap: 6,
+    shadowColor: '#0066FF',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
+  },
+  demoEventHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 4 },
+  demoEventIcon: { fontSize: 16 },
+  demoEventBadge: { fontSize: 12, fontWeight: '600', color: '#059669', backgroundColor: '#ECFDF5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 6, overflow: 'hidden' },
+  demoEventTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  demoEventMeta: { fontSize: 13, color: '#6B7280', lineHeight: 20 },
+
   heroTitle: {
     fontSize: 48,
     fontWeight: '900',

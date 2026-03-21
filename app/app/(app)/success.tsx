@@ -46,21 +46,49 @@ export default function Success() {
     <SafeAreaView style={styles.safe}>
       <View style={styles.container}>
         <View style={styles.content}>
-          <Text style={styles.checkmark}>✅</Text>
+          <View style={styles.checkCircle}>
+            <Text style={styles.checkIcon}>✓</Text>
+          </View>
           <Text style={styles.title}>Event Created!</Text>
+
+          {currentMeeting && (
+            <View style={styles.eventCard}>
+              <Text style={styles.eventTitle} numberOfLines={2}>{currentMeeting.title}</Text>
+              {currentMeeting.date && (
+                <Text style={styles.eventMeta}>
+                  📅 {currentMeeting.date}
+                  {currentMeeting.startTime ? `  ·  ${currentMeeting.startTime}${currentMeeting.endTime ? ` – ${currentMeeting.endTime}` : ''}` : ''}
+                </Text>
+              )}
+              {currentMeeting.location && (
+                <Text style={styles.eventMeta} numberOfLines={1}>📍 {currentMeeting.location}</Text>
+              )}
+            </View>
+          )}
+
           <Text style={styles.subtitle}>
-            Your meeting has been added to {providerName}.
-            {(provider === 'google' || provider === 'outlook') && '\nInvites sent to attendees.'}
-            {conferenceLink ? '\nVideo conference link included.' : ''}
+            Added to {providerName}.
+            {(provider === 'google' || provider === 'outlook') && ' Invites sent to attendees.'}
+            {conferenceLink ? ' Video link included.' : ''}
           </Text>
         </View>
 
         <View style={styles.actions}>
+          <Button
+            label="Add Another Meeting"
+            onPress={() => {
+              resetExtraction();
+              router.replace('/(app)/capture');
+            }}
+            variant="primary"
+            fullWidth
+          />
+
           {eventUrl ? (
             <Button
               label={`Open in ${providerName}`}
               onPress={handleOpenEvent}
-              variant="primary"
+              variant="secondary"
               fullWidth
             />
           ) : null}
@@ -82,16 +110,6 @@ export default function Success() {
               fullWidth
             />
           )}
-
-          <Button
-            label="Add Another Meeting"
-            onPress={() => {
-              resetExtraction();
-              router.replace('/(app)/capture');
-            }}
-            variant="ghost"
-            fullWidth
-          />
 
           <Button
             label="Back to Home"
@@ -118,14 +136,34 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 16,
+    paddingTop: 16,
   },
-  checkmark: { fontSize: 80 },
+  checkCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#0066FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  checkIcon: { fontSize: 36, color: '#FFFFFF', fontWeight: '800', lineHeight: 44 },
   title: { fontSize: 28, fontWeight: '800', color: '#111827' },
+  eventCard: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 14,
+    padding: 16,
+    width: '100%',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  eventTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  eventMeta: { fontSize: 14, color: '#6B7280' },
   subtitle: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: 15,
+    color: '#9CA3AF',
     textAlign: 'center',
-    lineHeight: 24,
+    lineHeight: 22,
   },
   actions: { gap: 10 },
 });

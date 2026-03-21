@@ -115,6 +115,7 @@ export default function SignIn() {
         )}
 
         <View style={styles.buttons}>
+          <Text style={styles.trustNote}>🔒 Secure sign-in · No calendar access without your permission</Text>
           <Button
             label="Continue with Google"
             onPress={() => promptGoogle()}
@@ -122,9 +123,6 @@ export default function SignIn() {
             variant="primary"
             fullWidth
           />
-          <Text style={styles.oauthHint}>
-            You may see a "Google hasn't verified this app" screen — tap <Text style={styles.oauthHintBold}>Advanced → Go to Calify</Text> to continue.
-          </Text>
 
           <Button
             label="Continue with Microsoft"
@@ -140,6 +138,10 @@ export default function SignIn() {
           >
             <Text style={styles.skipText}>Skip — use without account</Text>
           </TouchableOpacity>
+
+          <Text style={styles.oauthHint}>
+            New apps show a Google verification screen. Tap <Text style={styles.oauthHintBold}>Advanced → Go to Calify</Text> to proceed.
+          </Text>
         </View>
 
         <Text style={styles.legal}>
@@ -177,7 +179,8 @@ const styles = StyleSheet.create({
   errorBox: { backgroundColor: '#FEF2F2', borderRadius: 10, padding: 12, borderWidth: 1, borderColor: '#FECACA', marginBottom: 8 },
   errorText: { fontSize: 14, color: '#B91C1C', textAlign: 'center' },
   buttons: { gap: 12 },
-  oauthHint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', lineHeight: 17, marginTop: -4 },
+  trustNote: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginBottom: 4 },
+  oauthHint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', lineHeight: 17 },
   oauthHintBold: { fontWeight: '600', color: '#6B7280' },
   skipBtn: { paddingVertical: 14, alignItems: 'center' },
   skipText: { fontSize: 15, color: '#9CA3AF' },

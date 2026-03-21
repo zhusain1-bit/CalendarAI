@@ -15,15 +15,17 @@ import { getOfferings, purchasePackage } from '../src/services/revenueCat';
 import Button from '../src/components/ui/Button';
 
 const FEATURES = [
-  '✓ Unlimited meeting extractions',
-  '✓ Google Calendar integration',
-  '✓ Zoom meeting link generation',
-  '✓ ICS file download (works with Apple Calendar)',
-  '✓ Suggest My Availability — AI-drafted replies',
-  '✓ Full event history',
-  '✓ Edit & delete events',
-  '⏳ Outlook / Microsoft 365 — coming soon',
-  '⏳ Auto attendee invites — coming soon',
+  'Unlimited meeting extractions',
+  'Google Calendar integration',
+  'Zoom meeting link generation',
+  'ICS file download (works with Apple Calendar)',
+  'Suggest My Availability — AI-drafted replies',
+  'Full event history with edit & delete',
+];
+
+const COMING_SOON = [
+  'Outlook / Microsoft 365',
+  'Auto attendee invites',
 ];
 
 export default function Pricing() {
@@ -87,7 +89,20 @@ export default function Pricing() {
 
           <View style={styles.features}>
             {FEATURES.map((f) => (
-              <Text key={f} style={styles.feature}>{f}</Text>
+              <View key={f} style={styles.featureRow}>
+                <Text style={styles.featureCheck}>✓</Text>
+                <Text style={styles.feature}>{f}</Text>
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.comingSoonBox}>
+            <Text style={styles.comingSoonLabel}>Coming Soon</Text>
+            {COMING_SOON.map((f) => (
+              <View key={f} style={styles.featureRow}>
+                <Text style={styles.comingSoonDot}>⏳</Text>
+                <Text style={styles.comingSoonFeature}>{f}</Text>
+              </View>
             ))}
           </View>
 
@@ -146,8 +161,22 @@ const styles = StyleSheet.create({
   period: { fontSize: 20, fontWeight: '600', color: '#6B7280' },
   priceNote: { fontSize: 13, color: '#9CA3AF' },
   divider: { height: 1, backgroundColor: '#F3F4F6', marginBottom: 20 },
-  features: { gap: 12, marginBottom: 24 },
-  feature: { fontSize: 15, color: '#374151', lineHeight: 22 },
+  features: { gap: 10, marginBottom: 16 },
+  featureRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
+  featureCheck: { fontSize: 15, color: '#059669', fontWeight: '700', width: 16 },
+  feature: { fontSize: 15, color: '#374151', lineHeight: 22, flex: 1 },
+  comingSoonBox: {
+    backgroundColor: '#F9FAFB',
+    borderRadius: 10,
+    padding: 14,
+    gap: 8,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
+  },
+  comingSoonLabel: { fontSize: 11, fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 2 },
+  comingSoonDot: { fontSize: 13, width: 16 },
+  comingSoonFeature: { fontSize: 14, color: '#9CA3AF', flex: 1 },
   ctaBtn: { marginBottom: 14 },
   guarantee: { fontSize: 13, color: '#9CA3AF', textAlign: 'center' },
   faq: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', lineHeight: 22, maxWidth: 420 },

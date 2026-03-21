@@ -23,7 +23,7 @@ interface ButtonProps {
 
 const COLORS = {
   primary: { bg: '#0066FF', text: '#FFFFFF', border: 'transparent' },
-  secondary: { bg: '#F0F4FF', text: '#0066FF', border: '#0066FF' },
+  secondary: { bg: '#F3F4F6', text: '#374151', border: '#E5E7EB' },
   ghost: { bg: 'transparent', text: '#0066FF', border: 'transparent' },
   danger: { bg: '#FFF0F0', text: '#E53E3E', border: '#E53E3E' },
 } as const;

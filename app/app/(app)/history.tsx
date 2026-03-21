@@ -13,6 +13,7 @@ import {
 import { useMeetingStore, type SavedEvent } from '../../src/stores/meetingStore';
 import { useAuthStore } from '../../src/stores/authStore';
 import EventCard from '../../src/components/EventCard';
+import Button from '../../src/components/ui/Button';
 import { useRouter } from 'expo-router';
 
 export default function History() {
@@ -69,6 +70,12 @@ export default function History() {
           <Text style={styles.emptyText}>
             Your event history is saved when you sign in with Google or Microsoft.
           </Text>
+          <Button
+            label="Sign In"
+            onPress={() => router.push('/(auth)/sign-in')}
+            variant="primary"
+            style={{ marginTop: 8, paddingHorizontal: 32 }}
+          />
         </View>
       </SafeAreaView>
     );

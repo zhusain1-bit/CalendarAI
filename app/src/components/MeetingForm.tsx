@@ -55,25 +55,25 @@ export default function MeetingForm({ meeting, onChange }: Props) {
           onChange={(v) => update('date', v)}
           containerStyle={styles.half}
         />
-        <TimezonePickerField
-          label="Timezone"
-          value={meeting.timezone}
-          onChange={(v) => update('timezone', v)}
-          containerStyle={styles.half}
-        />
-      </View>
-
-      <View style={styles.row}>
         <TimePickerField
           label="Start Time"
           value={meeting.startTime}
           onChange={(v) => update('startTime', v)}
           containerStyle={styles.half}
         />
+      </View>
+
+      <View style={styles.row}>
         <TimePickerField
           label="End Time"
           value={meeting.endTime}
           onChange={(v) => update('endTime', v)}
+          containerStyle={styles.half}
+        />
+        <TimezonePickerField
+          label="Timezone"
+          value={meeting.timezone}
+          onChange={(v) => update('timezone', v)}
           containerStyle={styles.half}
         />
       </View>
