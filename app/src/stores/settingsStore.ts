@@ -12,6 +12,7 @@ export interface AppSettings {
   timeFormat: TimeFormat;
   defaultTimezone: string;
   defaultCalendarProvider: DefaultProvider;
+  defaultMeetingTitleTemplate: string | null;
 }
 
 interface SettingsState extends AppSettings {
@@ -26,6 +27,7 @@ const DEFAULTS: AppSettings = {
   timeFormat: '12h',
   defaultTimezone: SYSTEM_TZ,
   defaultCalendarProvider: null,
+  defaultMeetingTitleTemplate: null,
 };
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -41,6 +43,7 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
         timeFormat: current.timeFormat,
         defaultTimezone: current.defaultTimezone,
         defaultCalendarProvider: current.defaultCalendarProvider,
+        defaultMeetingTitleTemplate: current.defaultMeetingTitleTemplate,
         ...patch,
       })
     );

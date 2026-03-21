@@ -9,10 +9,18 @@ import {
   Alert,
   Platform,
   Image,
+  TextInput,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuthStore } from '../../src/stores/authStore';
 import { useSettingsStore, formatDuration, type DurationOption, type TimeFormat, type DefaultProvider } from '../../src/stores/settingsStore';
+
+const TITLE_PRESETS = [
+  { value: 'Meeting with [Name]', fallback: 'Meeting' },
+  { value: 'Intro Call with [Name]', fallback: 'Intro Call' },
+  { value: 'Sync with [Name]', fallback: 'Sync' },
+  { value: 'Coffee Chat with [Name]', fallback: 'Coffee Chat' },
+];
 import { useGoogleAuth } from '../../src/services/googleAuth';
 import { useMicrosoftAuth } from '../../src/services/microsoftAuth';
 import { useZoomAuth } from '../../src/services/zoomAuth';
@@ -32,8 +40,12 @@ const STATUS_LABELS: Record<string, { label: string; color: string }> = {
 export default function Account() {
   const router = useRouter();
   const { user, subscriptionStatus, googleAccessToken, microsoftAccessToken, zoomAccessToken, connectCalendar, disconnectCalendar, signOut, refreshMe } = useAuthStore() as any;
-  const { defaultMeetingDuration, timeFormat, defaultTimezone, defaultCalendarProvider, updateSettings } = useSettingsStore();
+  const { defaultMeetingDuration, timeFormat, defaultTimezone, defaultCalendarProvider, defaultMeetingTitleTemplate, updateSettings } = useSettingsStore();
   const [loading, setLoading] = useState(false);
+
+  const isPreset = TITLE_PRESETS.some(p => p.value === defaultMeetingTitleTemplate);
+  const isCustomMode = defaultMeetingTitleTemplate !== null && !isPreset;
+  const [customTitleInput, setCustomTitleInput] = useState(isCustomMode ? defaultMeetingTitleTemplate : '');
   const [calendarLoading, setCalendarLoading] = useState<'google' | 'microsoft' | 'zoom' | null>(null);
 
   const connectingRef = useRef<'google' | 'microsoft' | 'zoom' | null>(null);
@@ -354,6 +366,67 @@ export default function Account() {
               })}
             </View>
           </View>
+
+          {/* Default meeting title template */}
+          <View style={[styles.settingRow, styles.settingBorder]}>
+            <Text style={styles.settingLabel}>Default meeting title</Text>
+            <Text style={styles.settingHint}>
+              Used when no title is found. Use [Name] as a placeholder — replaced with the attendee's name.
+            </Text>
+            <View style={styles.chipRow}>
+              {/* None */}
+              <TouchableOpacity
+                style={[styles.chip, defaultMeetingTitleTemplate === null && styles.chipSelected]}
+                onPress={() => updateSettings({ defaultMeetingTitleTemplate: null })}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, defaultMeetingTitleTemplate === null && styles.chipTextSelected]}>None</Text>
+              </TouchableOpacity>
+
+              {/* Presets */}
+              {TITLE_PRESETS.map((p) => {
+                const selected = defaultMeetingTitleTemplate === p.value;
+                return (
+                  <TouchableOpacity
+                    key={p.value}
+                    style={[styles.chip, selected && styles.chipSelected]}
+                    onPress={() => updateSettings({ defaultMeetingTitleTemplate: p.value })}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{p.value}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+
+              {/* Custom */}
+              <TouchableOpacity
+                style={[styles.chip, isCustomMode && styles.chipSelected]}
+                onPress={() => {
+                  const val = customTitleInput.trim() || 'Meeting with [Name]';
+                  setCustomTitleInput(val);
+                  updateSettings({ defaultMeetingTitleTemplate: val });
+                }}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.chipText, isCustomMode && styles.chipTextSelected]}>Custom</Text>
+              </TouchableOpacity>
+            </View>
+
+            {isCustomMode && (
+              <TextInput
+                style={styles.titleTemplateInput}
+                value={customTitleInput}
+                onChangeText={(v) => {
+                  setCustomTitleInput(v);
+                  updateSettings({ defaultMeetingTitleTemplate: v || null });
+                }}
+                placeholder="e.g. Chat with [Name]"
+                placeholderTextColor="#9CA3AF"
+                autoCapitalize="words"
+                returnKeyType="done"
+              />
+            )}
+          </View>
         </Card>
 
         {/* Subscription */}
@@ -449,7 +522,19 @@ const styles = StyleSheet.create({
   connectBtn: { paddingHorizontal: 14, paddingVertical: 6, minHeight: 0 },
   settingRow: { paddingVertical: 14 },
   settingBorder: { borderTopWidth: 1, borderTopColor: '#F3F4F6' },
-  settingLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 10 },
+  settingLabel: { fontSize: 14, fontWeight: '600', color: '#374151', marginBottom: 6 },
+  settingHint: { fontSize: 12, color: '#9CA3AF', lineHeight: 16, marginBottom: 10 },
+  titleTemplateInput: {
+    marginTop: 10,
+    backgroundColor: '#F9FAFB',
+    borderWidth: 1.5,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    fontSize: 14,
+    color: '#111827',
+  },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     paddingHorizontal: 12,

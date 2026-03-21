@@ -162,7 +162,7 @@ export default function Preview() {
         </Text>
 
         <MeetingForm
-          meeting={applyDefaults(currentMeeting)}
+          meeting={currentMeeting}
           onChange={(updated) => updateCurrentMeeting(updated)}
         />
 

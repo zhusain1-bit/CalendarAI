@@ -28,6 +28,14 @@ import { withGoogleRefresh } from '../../src/utils/withGoogleRefresh';
 
 type InputMode = 'screenshot' | 'text';
 
+function resolveTitleTemplate(template: string, meeting: { organizer?: string | null; attendees?: { name: string }[] }): string {
+  if (!template.includes('[Name]')) return template;
+  const name = meeting.organizer?.trim() || meeting.attendees?.[0]?.name?.trim();
+  if (name) return template.replace('[Name]', name);
+  // No name extracted — strip the "[Name]" part gracefully
+  return template.replace(' with [Name]', '').replace('[Name]', '').trim() || 'Meeting';
+}
+
 const TEXT_PLACEHOLDER =
   'e.g. "Lunch with Sarah on Friday at 1pm at Nobu, sarah@example.com. ' +
   'Topic: Q2 planning."\n\nOr paste a message, email snippet, or any text mentioning a meeting.';
@@ -37,9 +45,9 @@ export default function Capture() {
   const { mode: flowMode } = useLocalSearchParams<{ mode?: string }>();
   const isSuggestMode = flowMode === 'suggest';
 
-  const { extractFromImage, extractFromText, status, error } = useMeetingStore();
+  const { extractFromImage, extractFromText, status, error, updateCurrentMeeting } = useMeetingStore();
   const { googleAccessToken, refreshGoogleToken } = useAuthStore();
-  const { defaultTimezone } = useSettingsStore();
+  const { defaultTimezone, defaultMeetingDuration, defaultMeetingTitleTemplate } = useSettingsStore();
 
   const [inputMode, setInputMode] = useState<InputMode>('screenshot');
   const [selectedImage, setSelectedImage] = useState<PickedImage | null>(null);
@@ -118,6 +126,28 @@ export default function Capture() {
     }
 
     if (useMeetingStore.getState().status === 'extracted') {
+      // Bake defaults into the store so preview always shows correct values
+      const meeting = useMeetingStore.getState().currentMeeting;
+      if (meeting) {
+        const patch: Record<string, any> = {};
+        if (!meeting.endTime && meeting.startTime) {
+          const [h, min] = meeting.startTime.split(':').map(Number);
+          const totalMin = h * 60 + min + defaultMeetingDuration;
+          const endH = Math.floor(totalMin / 60) % 24;
+          const endM = totalMin % 60;
+          patch.endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+        }
+        if (!meeting.timezone && defaultTimezone) {
+          patch.timezone = defaultTimezone;
+        }
+        if (!meeting.title && defaultMeetingTitleTemplate) {
+          patch.title = resolveTitleTemplate(defaultMeetingTitleTemplate, meeting);
+        }
+        if (Object.keys(patch).length > 0) {
+          updateCurrentMeeting(patch);
+        }
+      }
+
       if (isSuggestMode) {
         setPrefsSheetVisible(true);
       } else {
