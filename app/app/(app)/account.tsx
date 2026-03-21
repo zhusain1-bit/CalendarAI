@@ -44,8 +44,10 @@ export default function Account() {
   const [loading, setLoading] = useState(false);
 
   const isPreset = TITLE_PRESETS.some(p => p.value === defaultMeetingTitleTemplate);
-  const isCustomMode = defaultMeetingTitleTemplate !== null && !isPreset;
-  const [customTitleInput, setCustomTitleInput] = useState(isCustomMode ? defaultMeetingTitleTemplate : '');
+  const [isCustomMode, setIsCustomMode] = useState(defaultMeetingTitleTemplate !== null && !isPreset);
+  const [customTitleInput, setCustomTitleInput] = useState(
+    defaultMeetingTitleTemplate !== null && !isPreset ? defaultMeetingTitleTemplate : ''
+  );
   const [calendarLoading, setCalendarLoading] = useState<'google' | 'microsoft' | 'zoom' | null>(null);
 
   const connectingRef = useRef<'google' | 'microsoft' | 'zoom' | null>(null);
@@ -376,21 +378,21 @@ export default function Account() {
             <View style={styles.chipRow}>
               {/* None */}
               <TouchableOpacity
-                style={[styles.chip, defaultMeetingTitleTemplate === null && styles.chipSelected]}
-                onPress={() => updateSettings({ defaultMeetingTitleTemplate: null })}
+                style={[styles.chip, !isCustomMode && defaultMeetingTitleTemplate === null && styles.chipSelected]}
+                onPress={() => { setIsCustomMode(false); updateSettings({ defaultMeetingTitleTemplate: null }); }}
                 activeOpacity={0.7}
               >
-                <Text style={[styles.chipText, defaultMeetingTitleTemplate === null && styles.chipTextSelected]}>None</Text>
+                <Text style={[styles.chipText, !isCustomMode && defaultMeetingTitleTemplate === null && styles.chipTextSelected]}>None</Text>
               </TouchableOpacity>
 
               {/* Presets */}
               {TITLE_PRESETS.map((p) => {
-                const selected = defaultMeetingTitleTemplate === p.value;
+                const selected = !isCustomMode && defaultMeetingTitleTemplate === p.value;
                 return (
                   <TouchableOpacity
                     key={p.value}
                     style={[styles.chip, selected && styles.chipSelected]}
-                    onPress={() => updateSettings({ defaultMeetingTitleTemplate: p.value })}
+                    onPress={() => { setIsCustomMode(false); updateSettings({ defaultMeetingTitleTemplate: p.value }); }}
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.chipText, selected && styles.chipTextSelected]}>{p.value}</Text>
@@ -402,9 +404,8 @@ export default function Account() {
               <TouchableOpacity
                 style={[styles.chip, isCustomMode && styles.chipSelected]}
                 onPress={() => {
-                  const val = customTitleInput.trim() || 'Meeting with [Name]';
-                  setCustomTitleInput(val);
-                  updateSettings({ defaultMeetingTitleTemplate: val });
+                  setIsCustomMode(true);
+                  updateSettings({ defaultMeetingTitleTemplate: customTitleInput.trim() || null });
                 }}
                 activeOpacity={0.7}
               >
