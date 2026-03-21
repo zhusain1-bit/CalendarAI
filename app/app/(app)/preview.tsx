@@ -34,8 +34,19 @@ export default function Preview() {
   useEffect(() => {
     if (!currentMeeting) {
       router.replace('/(app)/capture');
+      return;
     }
-  }, [currentMeeting]);
+    // Pre-fill end time if missing
+    if (!currentMeeting.endTime && currentMeeting.startTime) {
+      const [h, min] = currentMeeting.startTime.split(':').map(Number);
+      const totalMin = h * 60 + min + defaultMeetingDuration;
+      const endH = Math.floor(totalMin / 60) % 24;
+      const endM = totalMin % 60;
+      updateCurrentMeeting({
+        endTime: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
+      });
+    }
+  }, []);
 
   if (!currentMeeting) return null;
 
