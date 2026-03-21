@@ -6,6 +6,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useAuthStore } from '../src/stores/authStore';
 import { useSettingsStore } from '../src/stores/settingsStore';
 import { initRevenueCat } from '../src/services/revenueCat';
+import { Analytics } from '@vercel/analytics/react';
 
 // Completes any in-progress auth session when the app (or popup) loads.
 // Must live here so it runs on every page, including the OAuth redirect target.
@@ -31,6 +32,7 @@ export default function RootLayout() {
         <Stack.Screen name="pricing" options={{ presentation: 'modal' }} />
         <Stack.Screen name="about" />
       </Stack>
+      <Analytics />
     </GestureHandlerRootView>
   );
 }
