@@ -49,8 +49,10 @@ router.post('/suggest', async (req, res, next) => {
 
     res.json({ reply, slots });
   } catch (err: any) {
-    if (err?.response?.status === 401 || err?.status === 401 || err?.code === 401) {
-      return next(createError('Google access token expired. Please reconnect your Google account.', 401, 'GOOGLE_TOKEN_EXPIRED'));
+    const is401 = err?.response?.status === 401 || err?.status === 401 || String(err?.code) === '401'
+      || err?.message?.toLowerCase().includes('access token') && err?.message?.toLowerCase().includes('expired');
+    if (is401) {
+      return next(createError('Your Google session has expired. Please go to Account and reconnect Google Calendar.', 401, 'GOOGLE_TOKEN_EXPIRED'));
     }
     next(err);
   }

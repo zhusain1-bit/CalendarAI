@@ -15,10 +15,12 @@ export async function withGoogleRefresh<T>(
   try {
     return await fn(token);
   } catch (err: any) {
-    if (err instanceof ApiError && err.code === 'GOOGLE_TOKEN_EXPIRED') {
+    const isGoogleExpired = err instanceof ApiError &&
+      (err.code === 'GOOGLE_TOKEN_EXPIRED' || err.status === 401);
+    if (isGoogleExpired) {
       const newToken = await refresh();
       if (!newToken) {
-        throw new Error('Google session expired. Please go to Account and reconnect Google Calendar.');
+        throw new Error('Your Google session has expired. Please go to Account and reconnect Google Calendar.');
       }
       return await fn(newToken);
     }
