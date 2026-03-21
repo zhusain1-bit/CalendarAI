@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -24,29 +24,41 @@ export default function Preview() {
   const router = useRouter();
   const { currentMeeting, updateCurrentMeeting, resetExtraction, saveEvent } = useMeetingStore();
   const { googleAccessToken, microsoftAccessToken, zoomAccessToken, user, refreshGoogleToken } = useAuthStore();
-  const { defaultMeetingDuration, defaultCalendarProvider } = useSettingsStore();
+  const { defaultMeetingDuration, defaultTimezone, defaultCalendarProvider } = useSettingsStore();
 
   const [sheetVisible, setSheetVisible] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [conferenceType, setConferenceType] = useState<'none' | 'meet' | 'zoom'>('none');
 
+  const defaultsApplied = useRef(false);
+
   useEffect(() => {
     if (!currentMeeting) {
       router.replace('/(app)/capture');
       return;
     }
-    // Pre-fill end time if missing
+    if (defaultsApplied.current) return;
+    defaultsApplied.current = true;
+
+    const updates: Partial<typeof currentMeeting> = {};
+
     if (!currentMeeting.endTime && currentMeeting.startTime) {
       const [h, min] = currentMeeting.startTime.split(':').map(Number);
       const totalMin = h * 60 + min + defaultMeetingDuration;
       const endH = Math.floor(totalMin / 60) % 24;
       const endM = totalMin % 60;
-      updateCurrentMeeting({
-        endTime: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
-      });
+      updates.endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
     }
-  }, []);
+
+    if (!currentMeeting.timezone && defaultTimezone) {
+      updates.timezone = defaultTimezone;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      updateCurrentMeeting(updates);
+    }
+  }, [currentMeeting, defaultMeetingDuration, defaultTimezone, updateCurrentMeeting]);
 
   if (!currentMeeting) return null;
 
