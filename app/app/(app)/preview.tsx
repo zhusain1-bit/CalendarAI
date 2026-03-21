@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -31,48 +31,32 @@ export default function Preview() {
   const [error, setError] = useState<string | null>(null);
   const [conferenceType, setConferenceType] = useState<'none' | 'meet' | 'zoom'>('none');
 
-  const defaultsApplied = useRef(false);
-
   useEffect(() => {
-    if (!currentMeeting) {
-      router.replace('/(app)/capture');
-      return;
-    }
-    if (defaultsApplied.current) return;
-    defaultsApplied.current = true;
-
-    const updates: Partial<typeof currentMeeting> = {};
-
-    if (!currentMeeting.endTime && currentMeeting.startTime) {
-      const [h, min] = currentMeeting.startTime.split(':').map(Number);
-      const totalMin = h * 60 + min + defaultMeetingDuration;
-      const endH = Math.floor(totalMin / 60) % 24;
-      const endM = totalMin % 60;
-      updates.endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
-    }
-
-    if (!currentMeeting.timezone && defaultTimezone) {
-      updates.timezone = defaultTimezone;
-    }
-
-    if (Object.keys(updates).length > 0) {
-      updateCurrentMeeting(updates);
-    }
-  }, [currentMeeting, defaultMeetingDuration, defaultTimezone, updateCurrentMeeting]);
+    if (!currentMeeting) router.replace('/(app)/capture');
+  }, [currentMeeting]);
 
   if (!currentMeeting) return null;
 
-  // Apply default duration if endTime is missing
+  // Compute effective meeting with defaults applied — used for both display and submission
+  function applyDefaults(m: typeof currentMeeting) {
+    if (!m) return m;
+    const result = { ...m };
+    if (!result.endTime && result.startTime) {
+      const [h, min] = result.startTime.split(':').map(Number);
+      const totalMin = h * 60 + min + defaultMeetingDuration;
+      const endH = Math.floor(totalMin / 60) % 24;
+      const endM = totalMin % 60;
+      result.endTime = `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`;
+    }
+    if (!result.timezone && defaultTimezone) {
+      result.timezone = defaultTimezone;
+    }
+    return result;
+  }
+
+  // Apply default duration if endTime is missing (kept for submission path)
   function meetingWithDefaults(m: typeof currentMeeting) {
-    if (!m || m.endTime || !m.startTime) return m;
-    const [h, min] = m.startTime.split(':').map(Number);
-    const totalMin = h * 60 + min + defaultMeetingDuration;
-    const endH = Math.floor(totalMin / 60) % 24;
-    const endM = totalMin % 60;
-    return {
-      ...m,
-      endTime: `${String(endH).padStart(2, '0')}:${String(endM).padStart(2, '0')}`,
-    };
+    return applyDefaults(m);
   }
 
   async function handleProviderSelect(provider: CalendarProvider) {
@@ -178,7 +162,7 @@ export default function Preview() {
         </Text>
 
         <MeetingForm
-          meeting={currentMeeting}
+          meeting={applyDefaults(currentMeeting)}
           onChange={(updated) => updateCurrentMeeting(updated)}
         />
 
